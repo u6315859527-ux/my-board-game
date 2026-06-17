@@ -1,25 +1,11 @@
 import Phaser from 'phaser';
-
-class GameScene extends Phaser.Scene {
-  constructor() {
-    super({ key: 'GameScene' });
-  }
-
-  create() {
-    this.add.text(400, 300, 'Board Game Template', {
-      fontSize: '32px',
-      color: '#ffffff'
-    }).setOrigin(0.5);
-  }
-}
+import MainScene from './MainScene';
 
 const config: Phaser.Types.Core.GameConfig = {
   type: Phaser.AUTO,
   width: 800,
-  height: 600,
-  parent: 'app',
-  scene: GameScene,
-  backgroundColor: '#222222'
+  height: 800,
+  scene: MainScene
 };
 
 new Phaser.Game(config);
