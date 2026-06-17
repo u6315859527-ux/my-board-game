@@ -9,8 +9,11 @@ export class GameUI {
   private playerText!: Phaser.GameObjects.Text;
   private buildButton!: Phaser.GameObjects.Rectangle;
   private shootButton!: Phaser.GameObjects.Rectangle;
+  private fireButton!: Phaser.GameObjects.Rectangle;
   private buildText!: Phaser.GameObjects.Text;
   private shootText!: Phaser.GameObjects.Text;
+  private fireText!: Phaser.GameObjects.Text;
+  private buildCounterText!: Phaser.GameObjects.Text;
 
   constructor(scene: Phaser.Scene) {
     this.scene = scene;
@@ -28,13 +31,20 @@ export class GameUI {
   }
 
   private createActionButtons() {
-    this.buildButton = this.scene.add.rectangle(420, 35, 140, 50, 0x00aa00).setInteractive().setScrollFactor(0);
-    this.buildText = this.scene.add.text(420, 35, "BUILD", { fontSize: '22px', color: '#ffffff', fontStyle: 'bold' })
-      .setOrigin(0.5).setScrollFactor(0);
+    // BUILD
+    this.buildButton = this.scene.add.rectangle(380, 35, 140, 50, 0x00aa00).setInteractive().setScrollFactor(0);
+    this.buildText = this.scene.add.text(380, 28, "BUILD", { fontSize: '22px', color: '#fff', fontStyle: 'bold' }).setOrigin(0.5).setScrollFactor(0);
+    this.buildCounterText = this.scene.add.text(380, 48, "0/3", { fontSize: '16px', color: '#fff' }).setOrigin(0.5).setScrollFactor(0);
 
-    this.shootButton = this.scene.add.rectangle(580, 35, 140, 50, 0x555555).setInteractive().setScrollFactor(0);
-    this.shootText = this.scene.add.text(580, 35, "SHOOT", { fontSize: '22px', color: '#ffffff', fontStyle: 'bold' })
-      .setOrigin(0.5).setScrollFactor(0);
+    // SHOOT
+    this.shootButton = this.scene.add.rectangle(540, 35, 140, 50, 0x555555).setInteractive().setScrollFactor(0);
+    this.shootText = this.scene.add.text(540, 35, "SHOOT", { fontSize: '22px', color: '#fff', fontStyle: 'bold' }).setOrigin(0.5).setScrollFactor(0);
+
+    // FIRE button (only visible in shoot mode)
+    this.fireButton = this.scene.add.rectangle(700, 35, 120, 50, 0xff2222)
+      .setInteractive().setScrollFactor(0).setVisible(false);
+    this.fireText = this.scene.add.text(700, 35, "FIRE!", { fontSize: '22px', color: '#ffffff', fontStyle: 'bold' })
+      .setOrigin(0.5).setScrollFactor(0).setVisible(false);
 
     this.setupButtonEvents();
     this.updateUI();
@@ -51,18 +61,28 @@ export class GameUI {
       this.currentAction = 'shoot';
       this.updateUI();
     });
+
+    this.fireButton.on('pointerdown', () => {
+      this.scene.events.emit('fireShot');   // We'll listen to this in MainScene
+    });
   }
 
   private updateUI() {
-    this.buildButton.setFillStyle(this.currentAction === 'build' ? 0x00aa00 : 0x555555);
-    this.shootButton.setFillStyle(this.currentAction === 'shoot' ? 0xff8800 : 0x555555);
+    const isBuild = this.currentAction === 'build';
+    this.buildButton.setFillStyle(isBuild ? 0x00aa00 : 0x555555);
+    this.shootButton.setFillStyle(!isBuild ? 0xff8800 : 0x555555);
+    this.fireButton.setVisible(!isBuild);
+    this.fireText.setVisible(!isBuild);
+    this.buildCounterText.setText(`${this.buildCount}/3`);
   }
 
+  // ... rest of the methods (setCurrentPlayer, incrementBuildCount, etc.) stay the same
   setCurrentPlayer(player: 1 | 2) {
     this.currentPlayer = player;
     this.playerText.setText(`Player ${player}'s Turn`);
     this.playerText.setColor(player === 1 ? '#4488ff' : '#ff4444');
     this.buildCount = 0;
+    this.updateUI();
   }
 
   getCurrentAction(): 'build' | 'shoot' {
@@ -71,13 +91,7 @@ export class GameUI {
 
   incrementBuildCount(): boolean {
     this.buildCount++;
-    if (this.buildCount >= 3) {
-      return true; // Turn is over
-    }
-    return false;
-  }
-
-  getBuildCount(): number {
-    return this.buildCount;
+    this.updateUI();
+    return this.buildCount >= 3;
   }
 }
