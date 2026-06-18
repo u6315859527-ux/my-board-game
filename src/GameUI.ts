@@ -32,19 +32,17 @@ export class GameUI {
 
   private createActionButtons() {
     // BUILD
-    this.buildButton = this.scene.add.rectangle(380, 35, 140, 50, 0x00aa00).setInteractive().setScrollFactor(0);
+    this.buildButton = this.scene.add.rectangle(380, 35, 160, 50, 0x00aa00).setInteractive().setScrollFactor(0);
     this.buildText = this.scene.add.text(380, 28, "BUILD", { fontSize: '22px', color: '#fff', fontStyle: 'bold' }).setOrigin(0.5).setScrollFactor(0);
     this.buildCounterText = this.scene.add.text(380, 48, "0/3", { fontSize: '16px', color: '#fff' }).setOrigin(0.5).setScrollFactor(0);
 
     // SHOOT
-    this.shootButton = this.scene.add.rectangle(540, 35, 140, 50, 0x555555).setInteractive().setScrollFactor(0);
-    this.shootText = this.scene.add.text(540, 35, "SHOOT", { fontSize: '22px', color: '#fff', fontStyle: 'bold' }).setOrigin(0.5).setScrollFactor(0);
+    this.shootButton = this.scene.add.rectangle(550, 35, 140, 50, 0x555555).setInteractive().setScrollFactor(0);
+    this.shootText = this.scene.add.text(550, 35, "SHOOT", { fontSize: '22px', color: '#fff', fontStyle: 'bold' }).setOrigin(0.5).setScrollFactor(0);
 
-    // FIRE button (only visible in shoot mode)
-    this.fireButton = this.scene.add.rectangle(700, 35, 120, 50, 0xff2222)
-      .setInteractive().setScrollFactor(0).setVisible(false);
-    this.fireText = this.scene.add.text(700, 35, "FIRE!", { fontSize: '22px', color: '#ffffff', fontStyle: 'bold' })
-      .setOrigin(0.5).setScrollFactor(0).setVisible(false);
+    // FIRE
+    this.fireButton = this.scene.add.rectangle(710, 35, 120, 50, 0xff2222).setInteractive().setScrollFactor(0).setVisible(false);
+    this.fireText = this.scene.add.text(710, 35, "FIRE!", { fontSize: '22px', color: '#ffffff', fontStyle: 'bold' }).setOrigin(0.5).setScrollFactor(0).setVisible(false);
 
     this.setupButtonEvents();
     this.updateUI();
@@ -63,7 +61,7 @@ export class GameUI {
     });
 
     this.fireButton.on('pointerdown', () => {
-      this.scene.events.emit('fireShot');   // We'll listen to this in MainScene
+      this.scene.events.emit('fireShot');
     });
   }
 
@@ -76,7 +74,6 @@ export class GameUI {
     this.buildCounterText.setText(`${this.buildCount}/3`);
   }
 
-  // ... rest of the methods (setCurrentPlayer, incrementBuildCount, etc.) stay the same
   setCurrentPlayer(player: 1 | 2) {
     this.currentPlayer = player;
     this.playerText.setText(`Player ${player}'s Turn`);

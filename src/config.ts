@@ -8,7 +8,7 @@ export const CELL_SIZE = 24;
 export const NUM_BASES = 4;
 export const BASE_CLUSTER_SPREAD = 6;     // minimum distance between enemy bases
 
-const offsetY = 6;
+const offsetY = 9;
 const centerX = Math.floor(GRID_WIDTH / 2) - 1;
 
 // Player 1 bases (top)
