@@ -48,23 +48,24 @@ export class GameUI {
     this.updateUI();
   }
 
-  private setupButtonEvents() {
-    this.buildButton.on('pointerdown', () => {
-      this.currentAction = 'build';
-      this.buildCount = 0;
-      this.updateUI();
-    });
+private setupButtonEvents() {
+  this.buildButton.on('pointerdown', () => {
+    this.currentAction = 'build';
+    this.buildCount = 0;
+    this.updateUI();
+    console.log("BUILD mode activated");
+  });
 
-    this.shootButton.on('pointerdown', () => {
-      this.currentAction = 'shoot';
-      this.updateUI();
-    });
+  this.shootButton.on('pointerdown', () => {
+    this.currentAction = 'shoot';
+    this.updateUI();
+    console.log("SHOOT mode activated");
+  });
 
-    this.fireButton.on('pointerdown', () => {
-      this.scene.events.emit('fireShot');
-    });
-  }
-
+  this.fireButton.on('pointerdown', () => {
+    this.scene.events.emit('fireShot');
+  });
+}
   private updateUI() {
     const isBuild = this.currentAction === 'build';
     this.buildButton.setFillStyle(isBuild ? 0x00aa00 : 0x555555);
@@ -74,21 +75,46 @@ export class GameUI {
     this.buildCounterText.setText(`${this.buildCount}/3`);
   }
 
-  setCurrentPlayer(player: 1 | 2) {
-    this.currentPlayer = player;
-    this.playerText.setText(`Player ${player}'s Turn`);
-    this.playerText.setColor(player === 1 ? '#4488ff' : '#ff4444');
-    this.buildCount = 0;
-    this.updateUI();
-  }
+setCurrentPlayer(player: 1 | 2) {
+  this.currentPlayer = player;
+  this.playerText.setText(`Player ${player}'s Turn`);
+  this.playerText.setColor(player === 1 ? '#4488ff' : '#ff4444');
+  
+  this.buildCount = 0;
+  this.currentAction = 'build';   // ← Force start in build mode
+  this.updateUI();
+  
+  console.log(`[UI] Player ${player} turn started - Build mode forced`);
+}
 
   getCurrentAction(): 'build' | 'shoot' {
     return this.currentAction;
   }
 
-  incrementBuildCount(): boolean {
-    this.buildCount++;
-    this.updateUI();
-    return this.buildCount >= 3;
+incrementBuildCount(): boolean {
+  this.buildCount++;
+  this.updateUI();
+  
+  console.log(`[UI] Build count now: ${this.buildCount}/3`);
+
+  if (this.buildCount >= 3) {
+    console.log("[UI] 3 tiles reached - signaling turn end");
+    return true;
   }
+  return false;
+}
+getBuildCount(): number {
+  return this.buildCount;
+}
+
+resetBuildCount() {
+  this.buildCount = 0;
+  this.updateUI();
+  console.log("[UI] Build count reset to 0");
+}
+setCurrentActionToBuild() {
+  this.currentAction = 'build';
+  this.buildCount = 0;
+  this.updateUI();
+}
 }
