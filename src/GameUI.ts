@@ -5,7 +5,7 @@ export class GameUI {
   private currentPlayer: 1 | 2 = 1;
   private currentAction: 'build' | 'shoot' = 'build';
   private buildCount = 0;
-
+private playerSquare!: Phaser.GameObjects.Rectangle;
   private playerText!: Phaser.GameObjects.Text;
   private buildButton!: Phaser.GameObjects.Rectangle;
   private shootButton!: Phaser.GameObjects.Rectangle;
@@ -18,18 +18,16 @@ export class GameUI {
   constructor(scene: Phaser.Scene) {
     this.scene = scene;
   }
+create() {
+  // Top bar background
+  this.scene.add.rectangle(400, 35, 800, 70, 0x222222).setScrollFactor(0);
 
-  create() {
-    this.scene.add.rectangle(400, 35, 800, 70, 0x222222).setScrollFactor(0);
+  // Colored square that indicates current player
+  this.playerSquare = this.scene.add.rectangle(100, 35, 50, 50, 0x0066ff)
+    .setScrollFactor(0);
 
-    this.scene.add.rectangle(100, 35, 50, 50, 0x0066ff).setScrollFactor(0);
-    this.playerText = this.scene.add.text(170, 35, "Player 1's Turn", {
-      fontSize: '28px', color: '#4488ff', fontStyle: 'bold'
-    }).setOrigin(0, 0.5).setScrollFactor(0);
-
-    this.createActionButtons();
-  }
-
+  this.createActionButtons();
+}
   private createActionButtons() {
     // BUILD
     this.buildButton = this.scene.add.rectangle(380, 35, 160, 50, 0x00aa00).setInteractive().setScrollFactor(0);
@@ -49,12 +47,12 @@ export class GameUI {
   }
 
 private setupButtonEvents() {
-  this.buildButton.on('pointerdown', () => {
-    this.currentAction = 'build';
-    this.buildCount = 0;
-    this.updateUI();
-    console.log("BUILD mode activated");
-  });
+this.buildButton.on('pointerdown', () => {
+  this.currentAction = 'build';
+  this.buildCount = 0;
+  this.updateUI();
+  console.log("✅ BUILD mode ACTIVATED by player");
+});
 
   this.shootButton.on('pointerdown', () => {
     this.currentAction = 'shoot';
@@ -74,19 +72,16 @@ private setupButtonEvents() {
     this.fireText.setVisible(!isBuild);
     this.buildCounterText.setText(`${this.buildCount}/3`);
   }
-
 setCurrentPlayer(player: 1 | 2) {
   this.currentPlayer = player;
-  this.playerText.setText(`Player ${player}'s Turn`);
-  this.playerText.setColor(player === 1 ? '#4488ff' : '#ff4444');
+  
+  // Update the colored square
+  this.playerSquare?.setFillStyle(player === 1 ? 0x4488ff : 0xff4444);
   
   this.buildCount = 0;
-  this.currentAction = 'build';   // ← Force start in build mode
+  this.currentAction = 'shoot';
   this.updateUI();
-  
-  console.log(`[UI] Player ${player} turn started - Build mode forced`);
 }
-
   getCurrentAction(): 'build' | 'shoot' {
     return this.currentAction;
   }
@@ -116,5 +111,22 @@ setCurrentActionToBuild() {
   this.currentAction = 'build';
   this.buildCount = 0;
   this.updateUI();
+
+
+
+}
+// Add this method inside the GameUI class
+forceBuildMode() {
+  this.currentAction = 'build';
+  this.buildCount = 0;
+  this.updateUI();
+  console.log(`[UI] Forced BUILD mode for new player`);
+}
+
+resetToBuildRequired() {
+  this.currentAction = 'shoot';   // Force player to click BUILD
+  this.buildCount = 0;
+  this.updateUI();
+  console.log(`[UI] New turn - BUILD button must be clicked`);
 }
 }

@@ -18,14 +18,7 @@ export default class MainScene extends Phaser.Scene {
 
   create() {
     // Listen for clearing shot selection when switching to Build
-this.events.on('clearShotSelection', () => {
-  if (this.selectedBlinkTween) {
-    this.selectedBlinkTween.stop();
-    this.selectedBlinkTween = null;
-  }
-  this.selectedShotTile = null;
-});
-// Hover highlighting for shoot mode
+    // === HOVER HIGHLIGHTING FOR SHOOT MODE ===
 this.input.on('pointermove', (pointer: Phaser.Input.Pointer) => {
   if (this.gameUI.getCurrentAction() !== 'shoot') return;
 
@@ -34,20 +27,81 @@ this.input.on('pointermove', (pointer: Phaser.Input.Pointer) => {
 
   if (gridX < 0 || gridX >= GRID_WIDTH || gridY < 0 || gridY >= GRID_HEIGHT) return;
 
-  // Find tile under cursor
   const hoveredTile = this.buildTiles.find(t => 
     Math.floor(t.x / CELL_SIZE) === gridX && 
     Math.floor((t.y - this.uiOffset) / CELL_SIZE) === gridY
   );
 
   if (hoveredTile) {
-    const isConn = this.isConnected(gridX, gridY, this.currentPlayer);
+const isConn = GameLogic.isConnected(this.buildTiles, this.uiOffset, gridX, gridY, this.currentPlayer);
     if (isConn) {
-      hoveredTile.setTint(0x00ff00);        // Green highlight for connected
+      hoveredTile.setTint(0x00ff88);     // Nice bright green
+      hoveredTile.setScale(1.2);         // Slightly bigger
+      hoveredTile.setStyle({ fontStyle: 'bold' });
     } else {
-      hoveredTile.setTint(0xff0000);        // Red for not connected
+      hoveredTile.setTint(0xff6666);     // Soft red for not connected
     }
   }
+});
+
+// Clear hover effects
+this.input.on('pointerout', () => {
+  this.buildTiles.forEach(tile => {
+    tile.clearTint();
+    tile.setScale(1);
+    tile.setStyle({ fontStyle: 'bold' });
+  });
+});
+this.events.on('clearShotSelection', () => {
+  if (this.selectedBlinkTween) {
+    this.selectedBlinkTween.stop();
+    this.selectedBlinkTween = null;
+  }
+  this.selectedShotTile = null;
+});
+// Hover highlighting for shoot mode
+// Hover highlighting - safe version
+// Hover effect - Shoot mode
+this.input.on('pointermove', (pointer: Phaser.Input.Pointer) => {
+  if (this.gameUI.getCurrentAction() !== 'shoot') return;
+
+  // Reset all tiles
+  this.buildTiles.forEach(t => {
+    t.clearTint();
+    t.setScale(1);
+  });
+
+  const gridX = Math.floor(pointer.x / CELL_SIZE);
+  const gridY = Math.floor((pointer.y - this.uiOffset) / CELL_SIZE);
+
+  const hoveredTile = this.buildTiles.find(t => 
+    Math.floor(t.x / CELL_SIZE) === gridX && 
+    Math.floor((t.y - this.uiOffset) / CELL_SIZE) === gridY
+  );
+
+  if (hoveredTile) {
+    const isConnected = GameLogic.isConnected(this.buildTiles, this.uiOffset, gridX, gridY, this.currentPlayer);
+
+    if (isConnected) {
+      hoveredTile.setTint(0x00ff88);
+      hoveredTile.setScale(1.25);
+    } else {
+      hoveredTile.setTint(0xff6666);
+    }
+  }
+});
+
+// Reset when mouse leaves the game
+this.input.on('pointerout', () => {
+  this.buildTiles.forEach(t => {
+    t.clearTint();
+    t.setScale(1);
+  });
+});
+
+// Clear tint
+this.input.on('pointerout', () => {
+  this.buildTiles.forEach(tile => tile.clearTint());
 });
 
 // Clear tint when mouse leaves a tile
@@ -56,9 +110,17 @@ this.input.on('pointerout', () => {
 });
 
 this.input.on('pointerout', () => {
-  this.buildTiles.forEach(t => t.clearTint());
+  this.buildTiles.forEach(t => {
+    t.clearTint();
+    t.setScale(1);
+  });
 });
-    this.cameras.main.setBackgroundColor('#f8f8f8');
+    
+
+
+
+
+this.cameras.main.setBackgroundColor('#f8f8f8');
 
     const graphics = this.add.graphics();
     graphics.lineStyle(1, 0x555555, 0.6);
@@ -124,11 +186,22 @@ this.input.on('pointerout', () => {
       if (clickedTile) this.selectShotTile(clickedTile);
     }
   }
-
 private placeBuildTile(gridX: number, gridY: number) {
+  if (this.gameUI.getCurrentAction() !== 'build') {
+    console.log("❌ Click the BUILD button first!");
+    return;
+  }
+
   console.log(`[Build] Trying to place at (${gridX}, ${gridY})`);
 
-  // Check if occupied
+  // === BLOCK PLACEMENT ON BASE TILES ===
+  const onBase = [...PLAYER1_BASES, ...PLAYER2_BASES].some(b => b.x === gridX && b.y === gridY);
+  if (onBase) {
+    console.log("❌ Cannot build on a Base tile");
+    return;
+  }
+
+  // Check if occupied by build tile
   const isOccupied = this.buildTiles.some(t => 
     Math.floor(t.x / CELL_SIZE) === gridX && 
     Math.floor((t.y - this.uiOffset) / CELL_SIZE) === gridY
@@ -138,7 +211,7 @@ private placeBuildTile(gridX: number, gridY: number) {
     console.log("❌ Cell occupied");
     return;
   }
-if (this.gameUI.getCurrentAction() !== 'build') return;
+
   // Place tile
   const color = this.currentPlayer === 1 ? '#4488ff' : '#ff6666';
   const symbol = this.currentPlayer === 1 ? "x" : "o";
@@ -152,16 +225,13 @@ if (this.gameUI.getCurrentAction() !== 'build') return;
 
   this.buildTiles.push(text);
 
-  // Increment and check
   const turnOver = this.gameUI.incrementBuildCount();
 
-  console.log(`✅ Placed tile. Build count now: ${this.gameUI.getBuildCount()}/3 | Turn over? ${turnOver}`);
-
   if (turnOver) {
-    console.log("🔄 3 tiles placed - switching player");
     this.switchPlayer();
   }
 }
+  // ... rest of your placeBuildTile code stays the same
 private selectShotTile(tile: Phaser.GameObjects.Text) {
   const gridX = Math.floor(tile.x / CELL_SIZE);
   const gridY = Math.floor((tile.y - this.uiOffset) / CELL_SIZE);
@@ -183,13 +253,15 @@ private selectShotTile(tile: Phaser.GameObjects.Text) {
 
   this.selectedShotTile = tile;
 
-  this.selectedBlinkTween = this.tweens.add({
-    targets: tile,
-    alpha: 0.25,
-    duration: 5280,
-    yoyo: true,
-    repeat: -1
-  });
+this.selectedBlinkTween = this.tweens.add({
+  targets: tile,
+  alpha: 0.4,
+  scale: 1.6,
+  tint: 0xffff00,        // yellow
+  duration: 180,
+  yoyo: true,
+  repeat: -1
+});
 }
 private executeShot() {
   if (!this.selectedShotTile) return;
@@ -296,16 +368,16 @@ private executeShot() {
     this.switchPlayer();
   }
 
-
-
 }
 private switchPlayer() {
+//private switchPlayer() {
   this.currentPlayer = this.currentPlayer === 1 ? 2 : 1;
+  
   console.log(`🔄 Switching to Player ${this.currentPlayer}`);
   
   this.gameUI.setCurrentPlayer(this.currentPlayer);
+  this.gameUI.resetToBuildRequired();   // Strong reset
 }
-
 
   private highlightAndDestroy(target: any) {
   if (!target) return;
