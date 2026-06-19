@@ -272,7 +272,8 @@ private executeShot() {
     this.lastFeedback = null;
   }
 
-  const dice = Phaser.Math.Between(1, 6);
+  //const dice = Phaser.Math.Between(1, 6);
+  const dice = Phaser.Math.Between(1, 2);
   console.log(`🎲 Player ${this.currentPlayer} rolled: ${dice}`);
 
   const shooterX = Math.floor(this.selectedShotTile.x / CELL_SIZE);
@@ -343,7 +344,15 @@ private executeShot() {
       hits++;
     }
   }
-
+// After the hits loop and feedback
+if (hits > 0) {
+  const gameOver = this.checkGameOver();
+  if (gameOver) {
+    return; // Game ended
+  }
+} else {
+  this.switchPlayer();
+}
   // Result feedback
   const resultText = hits > 0 ? `HIT! ${hits} destroyed` : "Miss...";
   const color = hits > 0 ? '#00ff00' : '#ff6666';
@@ -394,5 +403,29 @@ private switchPlayer() {
       target.destroy();
     }
   });
+}private checkGameOver() {
+  const enemyBases = this.currentPlayer === 1 ? PLAYER2_BASES : PLAYER1_BASES;
+
+  const remainingBases = enemyBases.filter(base => {
+    // Check if this base still exists on the board
+    return this.children.getAll().some(child => 
+      child instanceof Phaser.GameObjects.Rectangle &&
+      Math.floor(child.x / CELL_SIZE) === base.x &&
+      Math.floor((child.y - this.uiOffset) / CELL_SIZE) === base.y
+    );
+  });
+
+  if (remainingBases.length === 0) {
+    const winner = this.currentPlayer;
+    this.add.text(400, 300, `PLAYER ${winner} WINS!`, {
+      fontSize: '48px',
+      color: '#ffff00',
+      fontStyle: 'bold'
+    }).setOrigin(0.5).setScrollFactor(0);
+
+    console.log(`🎉 GAME OVER - Player ${winner} wins!`);
+    return true;
+  }
+  return false;
 }
 }
